@@ -145,7 +145,7 @@ flowchart LR
 
 Abaixo, as formas de onda obtidas no GTKWave para os 4 casos de teste:
 
-![Simulação - 4 casos de teste](../evidencias/sinais_ondas.jpg)
+![Simulação - 4 casos de teste](evidencias/sinais_ondas.jpg)
 
 
 ### Código VHDL Final 
@@ -532,22 +532,22 @@ end arch;
 Foram testados na DE10-Lite os mesmos 4 casos validados em simulação, confirmando o funcionamento físico do circuito.
 
 #### Caso 1 — Soma com carry-out
-![Caso 1 - carry-out](../evidencias/placa/Caso-1_soma_carry_out.gif)
+![Caso 1 - carry-out](evidencias/placa/Caso-1_soma_carry_out.gif)
 
 *Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`, sinal exibido no HEX3.*
 
 #### Caso 2 — Subtração com deslocamento à esquerda
-![Caso 2 - shift à esquerda](../evidencias/placa/Caso-2_deslocamento_esquerda.gif)
+![Caso 2 - shift à esquerda](evidencias/placa/Caso-2_deslocamento_esquerda.gif)
 
 *Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`.*
 
 #### Caso 3 — Soma sem deslocamento
-![Caso 3 - sem shift](../evidencias/placa/Caso-3_sem_deslocamento.gif)
+![Caso 3 - sem shift](evidencias/placa/Caso-3_sem_deslocamento.gif)
 
 *Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`.*
 
 #### Caso 4 — Cancelamento total (zero)
-![Caso 4 - zero](../evidencias/placa/Caso-4_resultado_nulo.gif)
+![Caso 4 - zero](evidencias/placa/Caso-4_resultado_nulo.gif)
 
 *Descrição: [SW usadas], resultado esperado `exp=0, frac=00`, observar o 
 comportamento do "zero negativo" no HEX3.*
