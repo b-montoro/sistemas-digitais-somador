@@ -116,7 +116,6 @@ Durante a adaptação inicial para a DE10-Lite, foi desenvolvido um primeiro pro
 
 Essas modificações permitiram adaptar o funcionamento do somador de ponto flutuante para a DE10-Lite, e permitir que ambos os operandos pudessem ser definidos pelo usuário.
 
-
 **Descrição gráfica do sistema**
 ## Descrição gráfica do sistema
 A figura abaixo, gerado utilizando Mermaid, apresenta a arquitetura final do sistema implementado na DE10-Lite. 
@@ -536,19 +535,33 @@ Abaixo, imagens do funcionamento na Placa para 4 casos.
 
 ---
 *Etapa 4 (considerando qeu a Etapa 4 considera toda a documentação em si)*
+
 ## 5. Diário de Bordo de IA 
-Utilizamos o Claude (Anthropic) para auxiliar na geração do testbench, na verificação dos resultados de simulação e na estruturação deste relatório. Abaixo está a análise crítica do uso da ferramenta.
+Utilizamos o Claude (Anthropic) e o Gemini PRO para auxiliar no caminho em como dividir as tarefas, construir o testbench, na verificação dos resultados de simulação, ajuda na normalização e também na indentação de códigos VHDL. 
 
 **Prompts Utilizados:**
-> "Insira aqui o prompt exato que você usou..."
+> "Preciso de ajuda com a elaboração de um projeto! Me ajude a definir as etapas e como realizá-las. Como também dividi-las em três pessoas de um grupo" (com upload dos slides do moodle e PDF do livro-texto)"
+
+> "Me ajude na indentação desse código em VHDL (envio do código), estou enfrentando erros no Quartus, mas não sei onde posso arrumar."
+
+> "Tenho esses arquivos mas estou enfrentando um erro: [colou o erro do terminal ghdl -r]" (com upload do fp_adder.vhd, tb_fp_adder.vhd e .vcd)
+
 
 **O Erro da IA (Alucinação):**
-> Descreva aqui o que a IA errou (ex: tentou usar pinos inexistentes, criou clock em testbench de circuito combinacional, etc).
+
+Não houve alucinação de fatos técnicos graves, mas ocorreram alguns deslizes, sendo eles questionados pela ação humana e posterior correção da IA.
+
+1. Erro de expectativa em teste (Etapa 1): ao montar o primeiro testbench com o caso de cancelamento total (A + (−A) = 0), a IA inicialmente previu que sign_out = '0' no resultado esperado. Ao rodar a simulação, o valor obtido foi sign_out = '1'. 
+
+2. Erro de sintaxe por colisão de identificadores (Etapa 2): no testbench de equivalência, a IA usou nomes de rótulo de instância (ref_hex0) iguais aos nomes dos sinais correspondentes (ref_HEX0), o que é inválido em VHDL. O erro foi identificado quando foi acionado o compilador GHDL e corrigido renomeando os rótulos de instância.
 
 **A Correção Humana:**
-> Como você corrigiu o código gerado para que ele funcionasse na nossa placa e na simulação.
+
+Não houve propriamente correções manuais extensas no código gerado, mas sim questionamentos feitos em relação às respostas produzidas pelas IAs. O que mais aconteceu foi a verificação das respostas, simulação dos casos e entendimento se aquilo realmente fazia sentido ou era um caso de alucinação da ferramenta. 
+
+Em nenhum dos momentos as ferramentas de Inteligência Artificial produziram informações tecnicamente falsas sobre o funcionamento do VHDL ou do algoritmo em si, mas sim erros de execução (sintaxe, flags de compilação, previsão de resultado) e puderam ser verificados e corrigidos rodando o código de fato, e não por revisão manual do texto gerado.
 
 ## 6. Contribuição dos participantes
-* [Bruna],
+* [Bruna], Compilação das etapas iniciais no compilador GHDL, Criação do repositório e estruturação do relatório
 * [João],
 * [Lívia], Implementação do projeto no Quartus Prime Lite Edition, Mapeamento dos pinos da FPGA DE10-Lite, Validação dos testes na FPGA, Redação do manuscrito original.
