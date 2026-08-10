@@ -696,5 +696,8 @@ Em nenhum dos momentos as ferramentas de Inteligência Artificial produziram inf
 
 ## 6. Contribuição dos participantes
 * [Bruna], Compilação das etapas iniciais no compilador GHDL, Criação do repositório e estruturação do relatório
-* [João],
+* [João], Elaboração e criação do video, Operação da placa FPGA, Filmagem para documentação
 * [Lívia], Implementação do projeto no Quartus Prime Lite Edition, Mapeamento dos pinos da FPGA DE10-Lite, Validação dos testes na FPGA, Redação do manuscrito original.
+
+## 7. Link para o video
+https://youtu.be/cnHM5alb4Hg
