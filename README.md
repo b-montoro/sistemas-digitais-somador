@@ -6,7 +6,7 @@
 
 **Disciplina:** Sistemas Digitais Q2.2026
 
-**Data:** 07/08/2026
+**Data:** 09/08/2026
 
 ---
 *Etapa 1*
@@ -529,28 +529,145 @@ end arch;
 
 ### Funcionamento na Placa
 
+Os componentes seguem a seguinte disposição, como já mencionado:
+
+| | Sinal | Expoente | Fração |
+|---|---|---|---|
+| switches | SW9 | SW8-SW7-SW6-SW5 | SW4-SW3-SW2-SW1-SW0 |
+| display | HEX3 | HEX0 | HEX2-HEX1 |
+
+![Placa DE10-Lite com componentes mapeados](evidencias/FPGA_DE10-Lite.png)
+
+**Fonte:** Imagem adaptada de Electromanía Perú.    
+
 Foram testados na DE10-Lite os mesmos 4 casos validados em simulação, confirmando o funcionamento físico do circuito.
 
 #### Caso 1 — Soma com carry-out
 ![Caso 1 - carry-out](evidencias/placa/Caso-1_soma_carry_out.gif)
 
-*Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`, sinal exibido no HEX3.*
+**Soma 192 + 192**
+
+As switches 9-0 são configuradas inicialmente como 0 1000 10000 (representando o número 192, no visor é mostrado C08) e, ao pressionar o botão KEY0, esse valor é armazenado como o operando A. As switches não são modificadas pois o operando B possui o mesmo valor do operando A. Ao fazer a soma 192 + 192 = 384, ocorre um carry na soma das frações, gerando um resultado de 9 bits. A fração é normalizada para C0 e o expoente é incrementado de 8 para 9. Portanto, o visor mostra C09. 
+
+Isso é realizado pelo trecho do código abaixo, que verifica sum(8), o bit do carry. Se ele é 1, o expoente é incrementado e a fração é deslocada para a direita por conta da normalização. 
+
+```vhdl
+if sum(8)='1' then
+	expn <= expb + 1;
+	fracn <= sum(8 downto 1);
+```
+
+- Operando A: 0 1000 10000 -> visor mostra C08, onde C0 corresponde à fração e 8 ao expoente.
+- Botão KEY0 é pressionado e armazena o valor das switches como o operando A.
+- Operando B: 0 1000 10000 -> as switches permanecem inalteradas, pois B possui o mesmo valor de A.
+- O resultado é 192 + 192 = 384 -> o visor mostra C09 por conta da normalização e incremento do expoente.
+- O HEX3 permanece apagado pois o resultado é positivo. 
 
 #### Caso 2 — Subtração com deslocamento à esquerda
 ![Caso 2 - shift à esquerda](evidencias/placa/Caso-2_deslocamento_esquerda.gif)
 
-*Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`.*
+**Soma 192 - 176**
+
+Novamente, o operando A tem a correspondência 0 1000 10000, e o visor mostra C08, onde C0 é a fração e 8 o expoente. Após armazenar esse valor com o pressionamento do botão, as switches são alteradas para 1 1000 01100, correspondendo ao operando B, com valor -176. O resultado da operação é 16, que corresponde a 00010000 em binário de 8 bits. Para normalizar a fração, o circuito desloca esse valor três vezes até que o primeiro "1" seja o primeiro dígito, obtendo-se assim o valor 10000000, que corresponde a 80 em hexadecimal. Por terem sido feitos 3 deslocamentos, o expoente nesse caso é 8 - 3 = 5, e o visor mostra 805. 
+
+Os trechos correspondentes ao funcionamento deste caso são:
+
+1. Procura o primeiro 1 em sum e encontra leado <- "011", que representa os 3 deslocamentos:
+
+```vhdl
+leado <=
+	"000" when (sum(7)='1') else
+	"001" when (sum(6)='1') else
+	"010" when (sum(5)='1') else
+	"011" when (sum(4)='1') else
+	"100" when (sum(3)='1') else
+	"101" when (sum(2)='1') else
+	"110" when (sum(1)='1') else
+	"111";
+```
+
+- Utiliza o sum(4 downto 0) & "000" when "011", pois leado = "011", resultando na fração 10000000.
+
+```vhdl
+with leado select
+	sum_norm <=
+		sum(7 downto 0) when "000",
+        sum(6 downto 0) & '0' when "001",
+        sum(5 downto 0) & "00" when "010",
+        sum(4 downto 0) & "000" when "011",
+        sum(3 downto 0) & "0000" when "100",
+        sum(2 downto 0) & "00000" when "101",
+        sum(1 downto 0) & "000000" when "110",
+        sum(0) & "0000000" when others;
+```
+
+- Por fim, o ajuste do expoente da operação entra na condição "else" do bloco de código, que reduz o expoente de acordo com o número de deslocamentos:
+
+```vhdl
+expn <= expb - leado;
+```
+
+- Operando A: 0 1000 10000 -> visor mostra C08, onde C0 corresponde à fração e 8 ao expoente.
+- Botão KEY0 é pressionado e armazena o valor das switches como o operando A.
+- Operando B: 1 1000 01100.
+- O resultado é 192 - 176 = 16 (00010000 em binário) -> o visor mostra 805 por conta da normalização e deslocamento.
+- O HEX3 permanece apagado pois o resultado é positivo. 
 
 #### Caso 3 — Soma sem deslocamento
 ![Caso 3 - sem shift](evidencias/placa/Caso-3_sem_deslocamento.gif)
 
-*Descrição: [SW usadas], resultado esperado `exp=X, frac=Y`.*
+**Soma 160 + 72**
+
+É o caso mais básico, sem necessidade de deslocamento ou ajuste do expoente. O operando A é atribuído como 0 1000 01000, e o visor mostra A08, sendo A0 correspondente ao valor da fração e 8 ao expoente. Após o pressionamento do botão, as switches são ajustadas e o operando B passa a ser 0 0111 00100, de valor 72 em decimal. A soma 160 + 72 resulta em 232, que corresponde a E8 em hexadecimal. Como a soma das frações não gera carry e o resultado já está normalizado, o expoente permanece como 8. Portanto, o resultado do visor é E88. 
+
+- O principal trecho dessa soma é mostrado abaixo. Como o sinal dos operandos são iguais, é realizada uma adição, o primeiro caso do trecho abaixo. A soma em hexadecimal é A0 + 48 = E8:
+
+```vhdl
+sum <= ('0' & fracb) + ('0' & fraca) when signb = signs else
+	('0' & fracb) - ('0' & fraca);
+```
+
+- Operando A: 0 1000 01000 -> visor mostra A08, onde A0 corresponde à fração e 8 ao expoente.
+- Botão KEY0 é pressionado e armazena o valor das switches como o operando A.
+- Operando B: 0 0111 00100.
+- O resultado é 160 + 72 = 232 -> o visor mostra E88. 
 
 #### Caso 4 — Cancelamento total (zero)
 ![Caso 4 - zero](evidencias/placa/Caso-4_resultado_nulo.gif)
 
-*Descrição: [SW usadas], resultado esperado `exp=0, frac=00`, observar o 
-comportamento do "zero negativo" no HEX3.*
+**Soma 6 - 6**
+
+Soma que resulta num valor nulo. O operando A é definido como 0 0011 10000, representando o número decimal 6 positivo. Em seguida, apenas a switch SW9 é alterada para 1, e o operando B recebe 1 0011 10000, o 6 negativo. Como os operandos possuem sinais diferentes, o circuito realiza a subtração das frações e resulta em 0. Por fim, o visor mostra -000, resultado negativo e valor numérico igual a zero.
+
+- Trecho que realiza a subtração quando os sinais são diferentes, entrando no caso "else":
+
+```vhdl
+sum <= ('0' & fracb) + ('0' & fraca) when signb = signs else
+	('0' & fracb) - ('0' & fraca);
+```
+
+- Pela configuração de saída, o circuito entra no bloco do "else", pois os operandos tem a mesma magnitude. Portanto, o sinal de B é atribuído ao signb:
+
+```vhdl
+if (exp1 & frac1) > (exp2 & frac2) then
+	signb <= sign1;
+	signs <= sign2;
+	(...)
+else
+    signb <= sign2;
+    signs <= sign1;
+```
+
+- Atribuição do sinal:
+
+```vhdl
+sign_out <= signb;
+```
+
+- Operando A: 0 0011 10000.
+- Botão KEY0 é pressionado e armazena o valor das switches como o operando A.
+- Operando B: 1 0011 10000.
+- O resultado é 6 - 6 = 0 -> o visor mostra -000. 
 
 ## 5. Diário de Bordo de IA 
 Utilizamos o Claude (Anthropic) e o Gemini PRO para auxiliar no caminho em como dividir as tarefas, construir o testbench, na verificação dos resultados de simulação, ajuda na normalização e também na indentação de códigos VHDL. 
